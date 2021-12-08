@@ -1,0 +1,1 @@
+select * from sys_config where properties_name = 'th6BCURL';

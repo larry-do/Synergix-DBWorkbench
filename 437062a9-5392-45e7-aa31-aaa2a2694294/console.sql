@@ -1,0 +1,1 @@
+SELECT * FROM Vh_hst_approval e WHERE e.module_code='PJ' AND e.transaction_type_code='SQ' AND e.voucher_no='Q/SECB/SKY/182';
