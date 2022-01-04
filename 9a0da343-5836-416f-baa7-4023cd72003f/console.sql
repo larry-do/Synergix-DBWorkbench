@@ -33,5 +33,9 @@ set encrypted_private_key = '3YvrqVsWpTUtoVGGvLoWPumY+qCRXCDiNbX/0D/CcTG+mR4BfIL
     public_key            = 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwgsjWpiHLJQyX1XShZNO5cS8GQPk+73bLSDgPCedJKOc72pSV+/BgPsuSidP71W7ueWY2BZCmbCw4rUsWgIuHpzvYWx7mnWMf5foOy9UiV1podb6yUeisRsrPSFCMeSt1Bop71PL06Cg7OW+JQ9CItFCZg1YtrgVsb+2jNIk7lK0FbZFQ+oC2jxEVGEbvpaEKoP0ZJoVbykoG0IfB1Ys0xdUB1i/AzmzjmQVsylVkYCehYuBEawjpGqLpWOYjoOHZHLOi5G/Y6IPngUs4HxwzozHTzegCct1JwnRSigTSslAZVUOrDv6zyOn645h21IBDcottXnU+DU+VsqWwQm0GwIDAQAB'
 where user_id is not null;
 select * from mt_user;
-select * from mt_user where lower(alias) like lower('%TAN CHEE TANG%'); --PD0361 ;
+select * from mt_user where lower(alias) like lower('%WINSTON CHIEW%');
 -----------------------------------------------------------------------
+
+select * from global_config where property_name = 'folderPathForAttachmentFiles';
+
+UPDATE GLOBAL_CONFIG SET rendered = 'Y' WHERE PROPERTY_NAME = 'folderPathForAttachmentFiles';

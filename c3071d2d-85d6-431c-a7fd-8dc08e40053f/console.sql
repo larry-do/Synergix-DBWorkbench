@@ -261,3 +261,69 @@ select pj_ar_inv_hst_hdr.invoice_no, pj_ar_inv_hst_hdr.* from pj_ar_inv_hst_hdr 
 
 
 select * from MT_TRANSACTION_TYPE where MODULE_CODE = 'PJ' and TRANSACTION_TYPE_CODE IN ('EST', 'EST_REV');
+
+
+insert into pj_cus_clm_phs(clm_vch_no,
+                           clm_phase_no,
+                           phase_seq_no,
+                           parent_phase_no,
+                           clm_phase_desc,
+                           vo_type,
+                           claim_type,
+                           uom,
+                           unit_price,
+                           spec_no,
+                           qty,
+                           total_amount,
+                           customer_item_code,
+                           discount_amt,
+                           discount_percent,
+                           is_retain,
+                           prg_ret_percent,
+                           this_retention_percent_bal,
+                           this_retention_percent_bal_clm)
+select 'PJPC000144', --Change
+       est_phs.phase_no,
+       est_phs.seq_no,
+       est_phs.parent_phase_no,
+       est_phs.phase_desc,
+       est_phs.vo_type,
+       'A',
+       est_phs.unit_desc,
+       est_phs.base_unit_selling_price,
+       est_phs.spec_no,
+       case (select property_value from module_config where property_name = 'enableToInputClaimAndCertifiedAmountForOmissionPhase')
+           when 'Y' then est_phs.qty
+           else est_phs.qty - est_phs.omitted_qty end,
+       case (select property_value from module_config where property_name = 'enableToInputClaimAndCertifiedAmountForOmissionPhase')
+           when 'Y' then est_phs.pre_tax_extended_amt
+           else est_phs.pre_tax_extended_amt - est_phs.omitted_pre_tax_amt end,
+       case (select property_value from module_config where property_name = 'enableCustomerItemCode') when 'Y' then est_phs.customer_item_code end,
+       est_phs.discount_amt,
+       est_phs.discount_percent,
+       est_phs.is_retain,
+       est_phs.prg_ret_percent,
+       est_phs.prg_ret_percent,
+       est_phs.prg_ret_percent
+from pj_est_ost_phs as est_phs
+where (
+        ((select property_value from module_config where property_name = 'claimByPhaseWithZeroAmt') = 'N')
+        and (est_phs.pre_tax_extended_amt = 0)
+        and (est_phs.vo_type != 'N' or
+             (select count(child_phs.phase_no)
+              from pj_est_ost_phs as child_phs
+              where child_phs.parent_phase_no = est_phs.phase_no
+                and child_phs.pre_tax_extended_amt != 0) = 0)
+        and ((select coalesce(clm_phs.this_cum_claim_amt, 0)
+              from pj_cus_clm_phs as clm_phs
+                       join pj_cus_clm_vch_hdr as clm_hdr on clm_phs.clm_vch_no = clm_hdr.clm_vch_no
+              where clm_hdr.project_no = 'PJES000015' --Change
+                and clm_hdr.status != 'X'
+                and clm_hdr.clm_seq_no = 0            --Change to prev claim no.
+                and clm_phs.clm_phase_no = est_phs.phase_no) = 0)) = false
+  and est_phs.project_no = 'PJES000015'; --Change
+
+
+select budget_cost_in_home_ccy, revision_no, budget_date, *
+from pj_budget_ost_hdr
+where project_no = 'PJES000006';

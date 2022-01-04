@@ -47,5 +47,5 @@ where c.confrelid = (select oid from pg_class where relname = 'mt_company') and
 select * from global_config where property_name = 'folderPathForAttachmentFiles';
 
 UPDATE GLOBAL_CONFIG SET PROPERTY_VALUE = '' WHERE PROPERTY_NAME = 'folderPathForAttachmentFiles' and PROPERTY_VALUE = ' ';
-
+UPDATE GLOBAL_CONFIG SET rendered = 'Y' WHERE PROPERTY_NAME = 'folderPathForAttachmentFiles';
 select * from sys_config where properties_name = 'th6Host';

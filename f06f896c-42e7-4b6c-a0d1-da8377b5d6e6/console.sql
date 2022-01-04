@@ -741,3 +741,357 @@ select sum(size) from attachment_hdr;
 select * from attachment_hdr where mt_code_vch_no = 'SUB0000199';
 
 select * from module_config where property_name = 'hyperlinkForEmailAlertNotification';
+
+
+select Inv_home_amt_to_recog, Cost_home_to_recog, Total_actual_cost_home, Recog_total_cost_home, recog_inv_pre_tax_home_amt, * from pj_rcg_hst_hdr where project_no = 'PJO0000395' order by recognition_no;
+select Inv_home_amt_to_recog, Cost_home_to_recog, Total_actual_cost_home, Recog_total_cost_home, recog_inv_pre_tax_home_amt, * from pj_rcg_new_hdr where project_no = 'PJO0000395';
+select recog_inv_pre_tax_home_amt, recog_total_cost_home, * from pj_est_ost_hdr where project_no = 'PJO0000395';
+
+select recog_total_cost_home, * from pj_rcg_new_hdr where project_no = 'PJO0000311';
+
+select recog_total_cost_home, recog_inv_pre_tax_home_amt, gen_recognition_flag, * from pj_est_ost_hdr where project_no = 'PJO0000311';
+
+select * from pj_est_ost_cst_brkdwn where project_no = 'PJO0000311';
+
+select * from gl_ledger_summary where source_voucher_no = 'PJO0000395' order by line_item_no, transaction_type_code, gl_entry_type;
+select * from gl_ledger_detail where source_voucher_no='PJO0000395';
+
+
+-------------------- Fix AO Sheet------------------
+select * from pj_budget_obayashi_sch_view where budget_no = '309';
+select * from pj_cost_brkdwn_sch_cst_itm where budget_no = '309' and sch_seq_no = '2.1.1';
+--Comment out to prevent show error indicators of DataGrip
+/*select schView.project_no,
+       schView.project_name,
+       schView.budget_no,
+       schView.sch_seq_no,
+       schView.parent_sch_seq_no,
+       schView.cst_itm_no,
+       schView.sch_ordering_no,
+       schView.level,
+       schView.item_code,
+       schView.description,
+       schView.tender_net,
+       schView.execution_budget,
+       schView.hdr_execution_budget,
+       schView.cost_yet_to_receive_in_home_ccy,
+       schView.actual_cost_in_home_ccy,
+       schView.accum_commit,
+       schView.to_commit,
+       case
+           when level in ('T2') then
+               (select coalesce(sum(actual_cost_in_home_ccy), 0)
+                from pj_cost_brkdwn_sch cstBrkdwnSch
+                where cstBrkdwnSch.project_no = schView.project_no
+                  and cstBrkdwnSch.budget_no = schView.budget_no
+                  and cstBrkdwnSch.sch_seq_no = schView.sch_seq_no
+                  and ((year_posted_to =
+                        case
+                            when $P{FINANCIAL_PERIOD} > 1 then $P{FINANCIAL_YEAR}
+                            else $P{FINANCIAL_YEAR} - 1
+                            end
+                    and period_posted_to <
+                        case
+                            when $P{FINANCIAL_PERIOD} > 1 then $P{FINANCIAL_PERIOD} - 1
+                            else 12
+                            end) or (year_posted_to <
+                                     case
+                                         when $P{FINANCIAL_PERIOD} > 1 then $P{FINANCIAL_YEAR}
+                                         else $P{FINANCIAL_YEAR} - 1
+                                         end)))
+           when level in ('T0', 'T1') then
+               (select coalesce(sum(actual_cost_in_home_ccy), 0)
+                from pj_cost_brkdwn_sch cstBrkdwnSch
+                where cstBrkdwnSch.project_no = schView.project_no
+                  and cstBrkdwnSch.budget_no = schView.budget_no
+                  and cstBrkdwnSch.sch_seq_no like concat(schView.sch_seq_no, '.%')
+                  and ((year_posted_to = case
+                                             when $P{FINANCIAL_PERIOD} > 1 then $P{FINANCIAL_YEAR}
+                                             else $P{FINANCIAL_YEAR} - 1
+                    end
+                    and period_posted_to <
+                        case
+                            when $P{FINANCIAL_PERIOD} > 1 then $P{FINANCIAL_PERIOD} - 1
+                            else 12
+                            end) or (year_posted_to <
+                                     case
+                                         when $P{FINANCIAL_PERIOD} > 1 then $P{FINANCIAL_YEAR}
+                                         else $P{FINANCIAL_YEAR} - 1
+                                         end)))
+           when level in ('T3') then
+               (select coalesce(sum(actual_cost_in_home_ccy), 0)
+                from pj_cost_brkdwn_sch_cst_itm cstBrkdwnSchCstItem
+                where cstBrkdwnSchCstItem.project_no = schView.project_no
+                  and cstBrkdwnSchCstItem.budget_no = schView.budget_no
+                  and cstBrkdwnSchCstItem.sch_seq_no = schView.sch_seq_no
+                  and cstBrkdwnSchCstItem.cst_itm_seq_no = schView.cst_itm_no
+                  and ((year_posted_to =
+                        case
+                            when $P{FINANCIAL_PERIOD} > 1 then $P{FINANCIAL_YEAR}
+                            else $P{FINANCIAL_YEAR} - 1
+                            end
+                    and period_posted_to <
+                        case
+                            when $P{FINANCIAL_PERIOD} > 1 then $P{FINANCIAL_PERIOD} - 1
+                            else 12
+                            end) or (year_posted_to <
+                                     case
+                                         when $P{FINANCIAL_PERIOD} > 1 then $P{FINANCIAL_YEAR}
+                                         else $P{FINANCIAL_YEAR} - 1
+                                         end)))
+           else null
+           end as cost_incurred_till_prev_last_month,
+
+       case
+           when level in ('T2') then
+               coalesce((select actual_cost_in_home_ccy
+                         from pj_cost_brkdwn_sch cstBrkdwnSch
+                         where cstBrkdwnSch.project_no = schView.project_no
+                           and cstBrkdwnSch.budget_no = schView.budget_no
+                           and cstBrkdwnSch.sch_seq_no = schView.sch_seq_no
+                           and year_posted_to =
+                               case
+                                   when $P{FINANCIAL_PERIOD} > 1 then $P{FINANCIAL_YEAR}
+                                   else $P{FINANCIAL_YEAR} - 1
+                                   end
+                           and period_posted_to =
+                               case
+                                   when $P{FINANCIAL_PERIOD} > 1 then $P{FINANCIAL_PERIOD} - 1
+                                   else 12
+                                   end), 0)
+           when level in ('T0', 'T1') then
+               (select coalesce(sum(actual_cost_in_home_ccy), 0)
+                from pj_cost_brkdwn_sch cstBrkdwnSch
+                where cstBrkdwnSch.project_no = schView.project_no
+                  and cstBrkdwnSch.budget_no = schView.budget_no
+                  and cstBrkdwnSch.sch_seq_no like concat(schView.sch_seq_no, '.%')
+                  and year_posted_to =
+                      case
+                          when $P{FINANCIAL_PERIOD} > 1 then $P{FINANCIAL_YEAR}
+                          else $P{FINANCIAL_YEAR} - 1
+                          end
+                  and period_posted_to =
+                      case
+                          when $P{FINANCIAL_PERIOD} > 1 then $P{FINANCIAL_PERIOD} - 1
+                          else 12
+                          end)
+           when level in ('T3') then
+               coalesce((select actual_cost_in_home_ccy
+                         from pj_cost_brkdwn_sch_cst_itm cstBrkdwnSchCstItm
+                         where cstBrkdwnSchCstItm.project_no = schView.project_no
+                           and cstBrkdwnSchCstItm.budget_no = schView.budget_no
+                           and cstBrkdwnSchCstItm.sch_seq_no = schView.sch_seq_no
+                           and cstBrkdwnSchCstItm.cst_itm_seq_no = schView.cst_itm_no
+                           and year_posted_to =
+                               case
+                                   when $P{FINANCIAL_PERIOD} > 1 then $P{FINANCIAL_YEAR}
+                                   else $P{FINANCIAL_YEAR} - 1
+                                   end
+                           and period_posted_to =
+                               case
+                                   when $P{FINANCIAL_PERIOD} > 1 then $P{FINANCIAL_PERIOD} - 1
+                                   else 12
+                                   end), 0)
+           else null
+           end as cost_for_last_month,
+
+       case
+           when level in ('T2') then
+               coalesce((select actual_cost_in_home_ccy
+                         from pj_cost_brkdwn_sch cstBrkdwnSch
+                         where cstBrkdwnSch.project_no = schView.project_no
+                           and cstBrkdwnSch.budget_no = schView.budget_no
+                           and cstBrkdwnSch.sch_seq_no = schView.sch_seq_no
+                           and year_posted_to = $P{FINANCIAL_YEAR}
+                           and period_posted_to = $P{FINANCIAL_PERIOD}), 0)
+           when level in ('T0', 'T1') then
+               (select coalesce(sum(actual_cost_in_home_ccy), 0)
+                from pj_cost_brkdwn_sch cstBrkdwnSch
+                where cstBrkdwnSch.project_no = schView.project_no
+                  and cstBrkdwnSch.budget_no = schView.budget_no
+                  and cstBrkdwnSch.sch_seq_no like concat(schView.sch_seq_no, '.%')
+                  and year_posted_to = $P{FINANCIAL_YEAR}
+                  and period_posted_to = $P{FINANCIAL_PERIOD})
+           when level in ('T3') then
+               coalesce((select actual_cost_in_home_ccy
+                         from pj_cost_brkdwn_sch_cst_itm cstBrkdwnSchCstItm
+                         where cstBrkdwnSchCstItm.project_no = schView.project_no
+                           and cstBrkdwnSchCstItm.budget_no = schView.budget_no
+                           and cstBrkdwnSchCstItm.sch_seq_no = schView.sch_seq_no
+                           and cstBrkdwnSchCstItm.cst_itm_seq_no = schView.cst_itm_no
+                           and year_posted_to = $P{FINANCIAL_YEAR}
+                           and period_posted_to = $P{FINANCIAL_PERIOD}), 0)
+           else null
+           end as cost_for_this_month,
+       schView.final_estimated_cost,
+       schView.hdr_final_estimated_cost,
+       case
+           when level <> '' then
+               (select coalesce(budget_cost_in_home_ccy, 0)
+                from pj_budget_sch_as_at_e1 bgtAsAt
+                where bgtAsAt.project_no = schView.project_no
+                  and bgtAsAt.budget_no = schView.budget_no
+                  and bgtAsAt.sch_seq_no = schView.sch_seq_no
+                  and ((as_at_year = $P{FINANCIAL_YEAR} and as_at_period < $P{FINANCIAL_PERIOD}) or (as_at_year < $P{FINANCIAL_YEAR}))
+                order by bgtAsAt.revision_no desc fetch first 1 rows only)
+           else null
+           end as previous_month_est_cost
+from PJ_BUDGET_OBAYASHI_SCH_VIEW schView
+where project_no = $P{PROJECT_NO}
+  and level = 'T3'
+  and $P{REPORT_LEVEL} = 'T3'
+  and sch_seq_no = $P{PARENT_SCH_SEQ_NO}
+order by schView.budget_no, schView.sch_ordering_no;
+*/
+
+-- same as the above but non-formatted style
+/*
+select
+  schView.project_no,
+  schView.project_name,
+  schView.budget_no,
+  schView.sch_seq_no,
+  schView.parent_sch_seq_no,
+  schView.cst_itm_no,
+  schView.sch_ordering_no,
+  schView.level,
+  schView.item_code,
+  schView.description,
+  schView.tender_net,
+  schView.execution_budget,
+  schView.hdr_execution_budget,
+  schView.cost_yet_to_receive_in_home_ccy,
+  schView.actual_cost_in_home_ccy,
+  schView.accum_commit,
+  schView.to_commit,
+  case
+    when level in ('T2') then
+      (select coalesce(sum(actual_cost_in_home_ccy), 0) from pj_cost_brkdwn_sch cstBrkdwnSch
+      where cstBrkdwnSch.project_no = schView.project_no and cstBrkdwnSch.budget_no = schView.budget_no and cstBrkdwnSch.sch_seq_no = schView.sch_seq_no
+      and ((year_posted_to =
+	  case
+      when $P{FINANCIAL_PERIOD} > 1 then $P{FINANCIAL_YEAR}
+      else $P{FINANCIAL_YEAR} -1
+      end
+	  and period_posted_to <
+	  case
+      when $P{FINANCIAL_PERIOD} > 1 then $P{FINANCIAL_PERIOD} -1
+	  else 12
+	  end) or (year_posted_to <
+	  case
+      when $P{FINANCIAL_PERIOD} > 1 then $P{FINANCIAL_YEAR}
+      else $P{FINANCIAL_YEAR} -1
+      end)))
+    when level in ('T0', 'T1') then
+      (select coalesce(sum(actual_cost_in_home_ccy), 0) from pj_cost_brkdwn_sch cstBrkdwnSch
+      where cstBrkdwnSch.project_no = schView.project_no and cstBrkdwnSch.budget_no = schView.budget_no and cstBrkdwnSch.sch_seq_no like concat(schView.sch_seq_no, '.%')
+      and ((year_posted_to = case
+      when $P{FINANCIAL_PERIOD} > 1 then $P{FINANCIAL_YEAR}
+      else $P{FINANCIAL_YEAR} -1
+      end
+	  and period_posted_to <
+	  case
+      when $P{FINANCIAL_PERIOD} > 1 then $P{FINANCIAL_PERIOD} -1
+	  else 12
+	  end) or (year_posted_to <
+	  case
+      when $P{FINANCIAL_PERIOD} > 1 then $P{FINANCIAL_YEAR}
+      else $P{FINANCIAL_YEAR} -1
+      end)))
+when level in ('T3') then
+     (select coalesce(sum(actual_cost_in_home_ccy), 0) from pj_cost_brkdwn_sch_cst_itm cstBrkdwnSchCstItem
+      where cstBrkdwnSchCstItem.project_no = schView.project_no and cstBrkdwnSchCstItem.budget_no = schView.budget_no and cstBrkdwnSchCstItem.sch_seq_no = schView.sch_seq_no and cstBrkdwnSchCstItem.cst_itm_seq_no = schView.cst_itm_no
+      and ((year_posted_to =
+	  case
+      when $P{FINANCIAL_PERIOD} > 1 then $P{FINANCIAL_YEAR}
+      else $P{FINANCIAL_YEAR} -1
+      end
+	  and period_posted_to <
+	  case
+      when $P{FINANCIAL_PERIOD} > 1 then $P{FINANCIAL_PERIOD} -1
+	  else 12
+	  end) or (year_posted_to <
+	  case
+      when $P{FINANCIAL_PERIOD} > 1 then $P{FINANCIAL_YEAR}
+      else $P{FINANCIAL_YEAR} -1
+      end)))
+    else null
+  end as cost_incurred_till_prev_last_month,
+
+  case
+    when level in ('T2') then
+      coalesce( (select actual_cost_in_home_ccy from pj_cost_brkdwn_sch cstBrkdwnSch
+      where cstBrkdwnSch.project_no = schView.project_no and cstBrkdwnSch.budget_no = schView.budget_no and cstBrkdwnSch.sch_seq_no = schView.sch_seq_no
+      and year_posted_to =
+	  case
+	  when $P{FINANCIAL_PERIOD} > 1 then $P{FINANCIAL_YEAR}
+      else $P{FINANCIAL_YEAR} -1
+      end
+	  and period_posted_to =
+	  case
+      when $P{FINANCIAL_PERIOD} > 1 then $P{FINANCIAL_PERIOD} -1
+      else 12
+      end), 0)
+    when level in ('T0', 'T1') then
+      (select coalesce(sum(actual_cost_in_home_ccy), 0) from pj_cost_brkdwn_sch cstBrkdwnSch
+      where cstBrkdwnSch.project_no = schView.project_no and cstBrkdwnSch.budget_no = schView.budget_no and cstBrkdwnSch.sch_seq_no like concat(schView.sch_seq_no, '.%')
+      and year_posted_to =
+	  case
+	  when $P{FINANCIAL_PERIOD} > 1 then $P{FINANCIAL_YEAR}
+      else $P{FINANCIAL_YEAR} -1
+      end
+	  and period_posted_to =
+	  case
+      when $P{FINANCIAL_PERIOD} > 1 then $P{FINANCIAL_PERIOD} -1
+      else 12
+      end)
+ when level in ('T3') then
+     coalesce( (select actual_cost_in_home_ccy from pj_cost_brkdwn_sch_cst_itm cstBrkdwnSchCstItm
+      where cstBrkdwnSchCstItm.project_no = schView.project_no and cstBrkdwnSchCstItm.budget_no = schView.budget_no and cstBrkdwnSchCstItm.sch_seq_no = schView.sch_seq_no  and cstBrkdwnSchCstItm.cst_itm_seq_no = schView.cst_itm_no
+      and year_posted_to =
+	  case
+	  when $P{FINANCIAL_PERIOD} > 1 then $P{FINANCIAL_YEAR}
+      else $P{FINANCIAL_YEAR} -1
+      end
+	  and period_posted_to =
+	  case
+      when $P{FINANCIAL_PERIOD} > 1 then $P{FINANCIAL_PERIOD} -1
+      else 12
+      end), 0)
+    else null
+  end as cost_for_last_month,
+
+  case
+    when level in ('T2') then
+      coalesce( (select actual_cost_in_home_ccy from pj_cost_brkdwn_sch cstBrkdwnSch
+      where cstBrkdwnSch.project_no = schView.project_no and cstBrkdwnSch.budget_no = schView.budget_no and cstBrkdwnSch.sch_seq_no = schView.sch_seq_no
+      and year_posted_to = $P{FINANCIAL_YEAR} and period_posted_to = $P{FINANCIAL_PERIOD}), 0)
+    when level in ('T0', 'T1') then
+      (select coalesce(sum(actual_cost_in_home_ccy), 0) from pj_cost_brkdwn_sch cstBrkdwnSch
+      where cstBrkdwnSch.project_no = schView.project_no and cstBrkdwnSch.budget_no = schView.budget_no and cstBrkdwnSch.sch_seq_no like concat(schView.sch_seq_no, '.%')
+      and year_posted_to = $P{FINANCIAL_YEAR} and period_posted_to = $P{FINANCIAL_PERIOD})
+ when level in ('T3') then
+      coalesce( (select actual_cost_in_home_ccy from pj_cost_brkdwn_sch_cst_itm cstBrkdwnSchCstItm
+      where cstBrkdwnSchCstItm.project_no = schView.project_no and cstBrkdwnSchCstItm.budget_no = schView.budget_no and cstBrkdwnSchCstItm.sch_seq_no = schView.sch_seq_no and cstBrkdwnSchCstItm.cst_itm_seq_no = schView.cst_itm_no
+      and year_posted_to = $P{FINANCIAL_YEAR} and period_posted_to = $P{FINANCIAL_PERIOD}), 0)
+    else null
+  end as cost_for_this_month,
+  schView.final_estimated_cost,
+  schView.hdr_final_estimated_cost,
+  case
+    when level <> '' then
+      (select coalesce(budget_cost_in_home_ccy, 0) from pj_budget_sch_as_at_e1 bgtAsAt
+      where bgtAsAt.project_no = schView.project_no and bgtAsAt.budget_no = schView.budget_no and bgtAsAt.sch_seq_no = schView.sch_seq_no
+      and ((as_at_year = $P{FINANCIAL_YEAR} and as_at_period < $P{FINANCIAL_PERIOD}) or (as_at_year < $P{FINANCIAL_YEAR})) order by bgtAsAt.revision_no desc fetch first 1 rows only)
+    else null
+  end as previous_month_est_cost
+from PJ_BUDGET_OBAYASHI_SCH_VIEW schView
+where project_no = $P{PROJECT_NO}
+and level = 'T3'
+and $P{REPORT_LEVEL} = 'T3'
+and sch_seq_no = $P{PARENT_SCH_SEQ_NO}
+order by schView.budget_no, schView.sch_ordering_no*/
+
+--------------------END Fix AO Sheet------------------
+
+select budget_date, variation_date, variation_datetime from pj_budget_ost_hdr;

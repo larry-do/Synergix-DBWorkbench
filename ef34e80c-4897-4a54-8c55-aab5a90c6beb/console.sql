@@ -199,6 +199,8 @@ from pj_est_ost_phs as phs
 where hdr.project_no = 'EST0000005';
 
 
+
+
 select schView.project_no,
        schView.project_name,
        schView.budget_no,
@@ -348,8 +350,10 @@ select schView.project_no,
 from PJ_BUDGET_OBAYASHI_SCH_VIEW schView
          left join mt_financial_period finPer on CURRENT_DATE >= finPer.period_start_date AND CURRENT_DATE <= finPer.period_closing_date
 where project_no = 'EST0000005'
-  and level = 'T2'
+  and level = 'T3'
 order by schView.budget_no, schView.sch_ordering_no;
+
+
 
 
 create view PJ_BUDGET_OBAYASHI_SCH_VIEW
@@ -841,6 +845,8 @@ select * from attachment_hdr where level = 1;
 select count(binary_no) from attachment_binary;
 select sum(size) from attachment_binary;
 select sum(size) from attachment_hdr;
+
+
 
 
 

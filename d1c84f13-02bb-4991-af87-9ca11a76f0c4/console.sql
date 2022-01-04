@@ -156,3 +156,14 @@ INSERT INTO JRPT_PARAMETER (RPT_CODE, PARAMETER_NAME, PARAMETER_DESC, DATA_TYPE,
 
 select * from Mt_email_alert_config;
 
+SELECT hdr.FILE_NAME,
+       hdr.FILE_DESC,
+       hdr.FILE_ATTACHMENT,
+       bin.binary_data
+FROM ATTACHMENT_HDR as hdr
+         join attachment_binary as bin on hdr.binary_file_no = bin.binary_no
+WHERE 1 = 1
+  AND MT_CODE_VCH_NO = 'PHOEBE'
+  AND TYPE = 'S'
+ORDER BY ATTACHMENT_NO DESC
+    FETCH FIRST 1 ROW ONLY
